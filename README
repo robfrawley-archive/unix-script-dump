@@ -1,0 +1,6 @@
+HELPER SCRIPTS
+A small collection of helper scripts for random things of importance to me...
+
+SSH Key Make and Share - sshkey-makenshare
+Simple script to (optionally) generate an SSH dsa public key and then (optionally)
+copy your public key to the .authorized_keys2 file on a remote machine.

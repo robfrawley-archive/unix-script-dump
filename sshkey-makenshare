@@ -1,0 +1,65 @@
+#!/bin/bash
+
+##
+# Generate key and mate with other host for password-less logons...yay
+# This is specific to dsa (rsa) authentication
+##
+
+# by default id_*.pub does not exist
+FOUND_IDPUB=0
+
+# check if public key already exists
+if [ -r ~/.ssh/id_dsa.pub ]; then
+
+  echo "Found ~/.ssh/id_dsa.pub file..."
+  FOUND_IDPUB=1
+
+fi
+
+# by default do not run ssh-keygen
+RUN_SSHKG=0
+
+# ask if new key should be created
+if [ "$FOUND_IDPUB" == 1 ]; then
+  read -p "Would you like to regenerate a public key on this machine ($HOSTNAME)? [y/n]: "
+  if [ "$REPLY" == "y" ]; then 
+    RUN_SSHKG=1
+  fi
+else
+  read -p "No public key detected, generate public key on this machine ($HOSTNAME)? [y/n]: "
+  if [ "$REPLY" == "y" ]; then 
+    RUN_SSHKG=1
+  fi
+fi
+
+# generate new public key
+if [ "$RUN_SSHKG" == 1 ]; then
+  echo "Running 'ssh-keygen -t rsa' and be sure to follow the prompts..."
+  ssh-keygen -t dsa
+else
+  echo "Not generating key, as one already exists. Next..."
+fi
+
+# ask to transfer public key to known hosts on another machine
+RUN_TRANSFER=0
+
+read -p "Would you like to transfer this public key to another machine for rsa-based auth? [y/n]: "
+if [ "$REPLY" == "y" ]; then
+  RUN_TRANSFER=1
+  read -p "What is the user/hostname of the machine in the format user@hostname?: "
+  REMOTE_HN="$REPLY"
+fi
+
+# run transfer if user asked to do so
+if [ "$RUN_TRANSFER" == 1 ]; then
+
+  echo "Attempting to add public key to remote machine ($REMOTE_HN) authorized keys..."
+        cat ~/.ssh/id_dsa.pub | ssh "$REMOTE_HN" "cat - >> ~/.ssh/authorized_keys2"
+
+else
+
+echo "Not transferring public key to another machine..."
+
+fi
+
+echo "done..."
